@@ -1,0 +1,85 @@
+---
+title: "Research Report"
+author:
+- name: Ihsan Kahveci
+  affiliation: University of Washington
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  word_document:
+    toc: yes
+subtitle: 'Network Frailty and Herd Immunity'
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+## Set knitr options here
+knitr::opts_chunk$set(echo = FALSE,
+                      comment = NA, 
+                      cache = TRUE,
+                      warning = FALSE,
+                      message = FALSE, 
+                      cache.lazy = FALSE
+                      )
+
+```
+
+```{css, echo = FALSE}
+caption {
+      color: black;
+      font-weight: bold;
+      font-size: 1.0em;
+}
+```
+
+```{r libraries, include=FALSE}
+## Load libraries
+library(sna)
+library(tidyverse)
+
+```
+
+## Introduction
+
+```{r}
+rgraph(10) # A uniform random digraph of order 10
+rgraph(10, tprob=3/9) # Homogeneous Bernoulli w/mean degree 3
+rgraph(10, tprob=3/9, mode="graph") # As above, but undirected
+rgnm(1, 10, 20) # Uniform conditional on order, edges
+rguman(1, 10, mut=0.5, asym=0.25, null=0.25) # Homogeneous multinomial on dyad census
+rguman(1, 10, mut=0, asym=1, null=0) # An extreme case: random tournament
+gplot(rgws(1,50,1,2,0)) # A Watts-Strogatz process - baseline
+gplot(rgws(1,50,1,2,0.05)) # ...with rewiring probability 0.05
+gplot(rgws(1,50,1,2,0.2)) # ...with rewiring probability 0.2
+
+```
+$$\begin{equation}
+\bar{k} = \frac{\sum_i k_i}{n} =  \frac{2m}{n}
+\end{equation}$$
+$$\begin{equation} 
+d(G)^u = \bar{k} \times \frac{1}{n-1} =  \frac{\bar{k}}{n-1}
+\end{equation}$$
+
+
+
+
+```{r}
+rgraph(n=200, m=1, mode="graph", tprob=0.1) %>% gplot()
+```
+
+## Method
+
+
+
+## Code Appendix
+
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+
+```
+
+## References
+
