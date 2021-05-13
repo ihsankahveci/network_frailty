@@ -40,6 +40,7 @@ caption {
 library(sna)
 library(dplyr)
 library(purrr)
+options(scipen = 999)
 ```
 
 ## Introduction
@@ -53,7 +54,7 @@ k:average degree, d:density
 ```{r}
 n = 300
 mean_degrees = 6:20
-total = length(mean_degrees)*10
+total = length(mean_degrees)*100
 densities = mean_degrees/(n-1)
 
 ```
@@ -64,6 +65,7 @@ random_graphs = rgraph(n=n, m=total, mode="graph", tprob=densities)
 random_graphs = apply(random_graphs, 1, network)
 names(random_graphs) <- paste0("network", 1:length(random_graphs))
 ```
+
 
 
 ```{r}
@@ -117,9 +119,24 @@ comps_inv = component.dist(out_inverse)
 Calculating the mean values  
 
 ```{r}
-map(test, ~map_at(., c(1,3), mean))
+frailty = unlist(map_depth(comps, 2, mean)) 
+cdist = names(frailty) %>% stringr::str_detect("cdist")
+frailty = frailty[cdist]
+
+frailty_inv = unlist(map_depth(comps_inv, 2, mean)) 
+cdist_inv = names(frailty_inv) %>% stringr::str_detect("cdist")
+frailty_inv = frailty_inv[cdist_inv]
 ```
 
+
+```{r}
+library(ggplot2)
+library(tidyr)
+tibble(id=1:1500,frailty, frailty_inv) %>%
+  pivot_longer(-id) %>%
+  ggplot(aes(value, fill=name)) + 
+  geom_histogram(position = position_dodge())
+```
 
 
 
