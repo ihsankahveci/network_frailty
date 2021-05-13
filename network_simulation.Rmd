@@ -82,7 +82,7 @@ degree_attack <- function(graphs, inverse = FALSE){
     }else{
       weights = sum(degree)/(degree + 0.00000001)
     }
-    nodes = sample(1:n, n/2,  prob = weights)
+    nodes = sample(1:n, n/4,  prob = weights)
     for (node in nodes){
       edges = get.edgeIDs(g, v = node)
       if(length(edges) == 0) next
