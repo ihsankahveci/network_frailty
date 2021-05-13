@@ -44,18 +44,6 @@ library(dplyr)
 
 ## Introduction
 
-```{r}
-rgraph(10) # A uniform random digraph of order 10
-rgraph(10, tprob=3/9) # Homogeneous Bernoulli w/mean degree 3
-rgraph(10, tprob=3/9, mode="graph") # As above, but undirected
-rgnm(1, 10, 20) # Uniform conditional on order, edges
-rguman(1, 10, mut=0.5, asym=0.25, null=0.25) # Homogeneous multinomial on dyad census
-rguman(1, 10, mut=0, asym=1, null=0) # An extreme case: random tournament
-gplot(rgws(1,50,1,2,0)) # A Watts-Strogatz process - baseline
-gplot(rgws(1,50,1,2,0.05)) # ...with rewiring probability 0.05
-gplot(rgws(1,50,1,2,0.2)) # ...with rewiring probability 0.2
-
-```
 
 $$\bar{k} = \frac{\sum_i k_i}{n} =  \frac{2m}{n}$$
 
@@ -65,7 +53,7 @@ k:average degree, d:density
 ```{r}
 n = 300
 mean_degrees = 6:20
-total = length(mean_degrees)*100
+total = length(mean_degrees)*10
 densities = mean_degrees/(n-1)
 
 ```
@@ -92,11 +80,12 @@ degree_attack <- function(graphs, inverse = FALSE){
     if(inverse == FALSE){
       weights = degree/sum(degree)
     }else{
-      weights = sum(degree)/(degree+0.001)
+      weights = sum(degree)/(degree + 0.00000001)
     }
-    nodes = sample(1:n, n/4,  prob = weights)
+    nodes = sample(1:n, n/2,  prob = weights)
     for (node in nodes){
       edges = get.edgeIDs(g, v = node)
+      if(length(edges) == 0) next
       remove = sample(edges, size = 1)
       delete.edges(g, remove)
     }
@@ -109,20 +98,36 @@ degree_attack <- function(graphs, inverse = FALSE){
   
 ```
 
+```{r}
+out = degree_attack(random_graphs, inverse = FALSE)
+```
 
 ```{r}
 out_inverse = degree_attack(random_graphs, inverse = TRUE)
 ```
 
 ```{r}
-test = random_graphs[[3]]
+a = degree(out[100], gmode = "graph")
+degree(out_inverse[100], gmode = "graph")
+
 ```
+
+```{r}
+test = random_graphs[[1]]
+```
+
+```{r}
+test
+```
+
 
 ```{r}
 d = degree(test, gmode = "graph")
 weights = sum(d)/(d+0.00000001)
 nodes = sample(1:300, 10, prob = weights)
-edges = get.edgeIDs(test, nodes[10])
+edges = get.edgeIDs(test, nodes[1])
+edges
+length(edges) ==0
 remove = sample(edges, 1)
 remove
 ```
