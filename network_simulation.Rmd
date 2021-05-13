@@ -39,7 +39,7 @@ caption {
 ## Load libraries
 library(sna)
 library(dplyr)
-
+library(purrr)
 ```
 
 ## Introduction
@@ -98,43 +98,29 @@ degree_attack <- function(graphs, inverse = FALSE){
   
 ```
 
-```{r}
-out = degree_attack(random_graphs, inverse = FALSE)
-```
+
+Simulating degree attack both forwards and backwards
 
 ```{r}
+out = degree_attack(random_graphs, inverse = FALSE)
 out_inverse = degree_attack(random_graphs, inverse = TRUE)
 ```
 
-```{r}
-a = degree(out[100], gmode = "graph")
-degree(out_inverse[100], gmode = "graph")
 
-```
+Running community detection to find the bridge nodes.
 
 ```{r}
-test = random_graphs[[1]]
+comps = component.dist(out)
+comps_inv = component.dist(out_inverse)
 ```
+
+Calculating the mean values  
 
 ```{r}
-test
+map(test, ~map_at(., c(1,3), mean))
 ```
 
 
-```{r}
-d = degree(test, gmode = "graph")
-weights = sum(d)/(d+0.00000001)
-nodes = sample(1:300, 10, prob = weights)
-edges = get.edgeIDs(test, nodes[1])
-edges
-length(edges) ==0
-remove = sample(edges, 1)
-remove
-```
-
-```{r}
-comps %>% unlist() %>% max()
-```
 
 
 ## Code Appendix
