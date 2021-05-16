@@ -1,0 +1,82 @@
+---
+title: "igraph-test"
+author: "Ihsan Kahveci"
+date: "5/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(igraph)
+library(tidyverse)
+```
+
+```{r}
+set.seed(57)
+size = 300
+mean_degrees = 6:20 #100
+total = length(mean_degrees)*100
+densities = mean_degrees/(size-1)
+
+```
+
+
+
+
+```{r}
+random_graphs = list()
+for (d in densities){
+  graphs = replicate(100, sample_gnp(300, p=d), simplify = FALSE)
+  random_graphs = c(random_graphs, graphs)
+}
+```
+
+
+```{r}
+hist(sapply(lapply(random_graphs, degree), mean), xlab="mean degree", main="")
+```
+
+```{r}
+random_graphs = lapply(random_graphs, get.edgelist)
+```
+
+```{r}
+rgraph(30, 1, return.as.edgelist = T)
+```
+
+```{r}
+g = random_graphs[[1]]
+sna::as.sociomatrix.sna(g) %>% sna::as.edgelist.sna()
+```
+
+
+```{r}
+degree_attack <- function(g, inverse = FALSE){
+  n = gorder(g)
+  d = degree(g)
+  if(inverse == FALSE) weights = d/sum(d)
+  else weights = sum(d)/(d + 0.00000001)
+  nodes = sample(V(g), n/4, prob = weights)
+  for (node in nodes){
+  edges = as_adj_edge_list(g)[[node]]
+  if(length(edges) == 0) next
+  remove = sample(edges, 1)
+  g = delete_edges(g, remove)
+  } 
+  return(g)
+}
+```
+
+```{r}
+out = lapply(random_graphs, degree_attack)
+```
+
