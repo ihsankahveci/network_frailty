@@ -40,6 +40,7 @@ caption {
 library(sna)
 library(dplyr)
 library(purrr)
+library(ggplot2)
 options(scipen = 999)
 ```
 
@@ -52,7 +53,6 @@ $$ d(G)^u = \bar{k} \times \frac{1}{n-1} =  \frac{\bar{k}}{n-1}$$
 k:average degree, d:density
 
 ```{r}
-set.seed(57)
 size = 1000
 mean_degrees = 6:20 #100
 total = length(mean_degrees)*100
@@ -68,6 +68,7 @@ names(random_graphs) <- paste0("network", 1:length(random_graphs))
 
 
 
+
 ```{r}
 hist(sapply(lapply(random_graphs, degree, gmode="graph"), mean), xlab="mean degree", main="")
 ```
@@ -78,7 +79,7 @@ degree_attack <- function(g, inverse = FALSE){
   d = degree(g, gmode = "graph")
   if(inverse == FALSE) weights = d/sum(d)
   else weights = sum(d)/(d + 0.00000001)
-  nodes = sample(n, n/2, prob = weights)
+  nodes = sample(n, n/4, prob = weights)
   for (node in nodes){
     inds = which(g[,1] == node)
     if(length(inds) == 0) next #in case the node has no edges
@@ -100,88 +101,37 @@ Simulating degree attack both forwards and backwards
 
 ```{r}
 out = lapply(random_graphs, degree_attack)
-out_inverse = lapply(random_graphs, degree_attack, inverse = TRUE)
+out_inv = lapply(random_graphs, degree_attack, inverse = TRUE)
 ```
 
 
+Running community detection to calculate the number of bridge nodes per graph..
 
 ```{r}
-x = 500
-random_graphs[[x]] %>% degree(gmode = "graph")  %>% mean()
-out[[x]] %>% degree(gmode = "graph")  %>% mean()
-out_inverse[[x]]  %>% degree(gmode = "graph") %>% mean()
-```
-
-```{r}
-gplot(random_graphs[[x]], gmode = "graph")
-gplot(out[[x]], gmode = "graph")
-gplot(out_inverse[[x]], gmode = "graph")
-
-```
-
-```{r}
-cutpoints(random_graphs[[x]], mode = "graph")
-cutpoints(out[[x]], mode = "graph")
-cutpoints(out_inverse[[x]], mode = "graph")
-```
-
-```{r}
-component.dist(out_inverse[[x]])
+frailty = cutpoints(out, mode = "graph") %>% map_dbl(length)
+frailty_inv = cutpoints(out_inverse, mode = "graph") %>% map_dbl(length)
 ```
 
 
-Running community detection to find the bridge nodes.
+Creating a data_frame for visualizations.
 
 ```{r}
-comps = component.dist(out)
-comps_inv = component.dist(out_inverse)
+avg_degree = sapply(lapply(out, degree, gmode="graph"), mean)
+avg_degree_inv = sapply(lapply(out_inv, degree, gmode="graph"), mean)
+
+graphs_df = tibble(graph = 1:length(out), frailty, frailty_inv, avg_degree, avg_degree_inv)
 ```
 
 ```{r}
-g = out[[1]]
-colnames(g) = c("snd", "rec", "val")
-```
-
-```{r}
-component.dist(g)
-```
-
-```{r}
-sna::as.edgelist.sna(g)
+graphs_df
 ```
 
 
 ```{r}
-edgelist = out[[1000]]
-test = network(edgelist, directed = FALSE) 
-```
-
-
-```{r}
-component.dist(test)
-```
-
-
-Calculating the mean values  
-
-```{r}
-frailty = unlist(map_depth(comps, 2, mean)) 
-cdist = names(frailty) %>% stringr::str_detect("cdist")
-frailty = frailty[cdist]
-
-frailty_inv = unlist(map_depth(comps_inv, 2, mean)) 
-cdist_inv = names(frailty_inv) %>% stringr::str_detect("cdist")
-frailty_inv = frailty_inv[cdist_inv]
-```
-
-
-```{r}
-library(ggplot2)
-library(tidyr)
-tibble(id=1:1500,frailty, frailty_inv) %>%
-  pivot_longer(-id) %>%
-  ggplot(aes(value, fill=name)) + 
-  geom_histogram(position = position_dodge())
+graphs_df %>%
+  ggplot(aes(x=avg_degree, y=frailty)) +
+  geom_point() +
+  geom_smooth()
 ```
 
 
