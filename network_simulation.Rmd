@@ -53,7 +53,7 @@ k:average degree, d:density
 
 ```{r}
 set.seed(57)
-size = 300
+size = 1000
 mean_degrees = 6:20 #100
 total = length(mean_degrees)*100
 densities = mean_degrees/(size-1)
@@ -66,9 +66,6 @@ random_graphs = rgraph(n=size, m=total, mode="graph", tprob=densities, return.as
 names(random_graphs) <- paste0("network", 1:length(random_graphs))
 ```
 
-```{r}
-degree(random_graphs[1], gmode = "graph") %>% mean()
-```
 
 
 ```{r}
@@ -77,42 +74,26 @@ hist(sapply(lapply(random_graphs, degree, gmode="graph"), mean), xlab="mean degr
 
 ```{r}
 degree_attack <- function(g, inverse = FALSE){
-  n = 300
+  n = 1000
   d = degree(g, gmode = "graph")
   if(inverse == FALSE) weights = d/sum(d)
   else weights = sum(d)/(d + 0.00000001)
-  nodes = sample(n, n/4, prob = weights)
+  nodes = sample(n, n/2, prob = weights)
   for (node in nodes){
     inds = which(g[,1] == node)
     if(length(inds) == 0) next #in case the node has no edges
     ind = sample(inds, 1)
-    if(length(ind) == 0) next 
-    g[ind,3] = 0  #in most cases ind+1 is symmetric to ind
+    adj = g[ind, 2]
+    ind.2 = which(g[,1] == adj & g[,2] == node) #find the symmetric row
+    g[c(ind, ind.2),3] = 0  
   }
   return(g)
 }
   
 ```
 
-note: collapse graph for removing the single way edges
+note: collapse graph for removing the single way edges 
 
-```{r}
-g = rgraph(6, mode = "graph", return.as.edgelist = T)
-```
-
-```{r}
-g[c(1),3] = 0
-g
-```
-
-```{r}
-gplot(g, gmode = "graph", label = 1:6)
-```
-
-
-```{r}
-degree_attack(random_graphs)
-```
 
 
 Simulating degree attack both forwards and backwards
@@ -122,18 +103,32 @@ out = lapply(random_graphs, degree_attack)
 out_inverse = lapply(random_graphs, degree_attack, inverse = TRUE)
 ```
 
-```{r}
-out = lapply(out, network, directed=FALSE)
-```
-
 
 
 ```{r}
-x = 57
+x = 500
 random_graphs[[x]] %>% degree(gmode = "graph")  %>% mean()
 out[[x]] %>% degree(gmode = "graph")  %>% mean()
 out_inverse[[x]]  %>% degree(gmode = "graph") %>% mean()
 ```
+
+```{r}
+gplot(random_graphs[[x]], gmode = "graph")
+gplot(out[[x]], gmode = "graph")
+gplot(out_inverse[[x]], gmode = "graph")
+
+```
+
+```{r}
+cutpoints(random_graphs[[x]], mode = "graph")
+cutpoints(out[[x]], mode = "graph")
+cutpoints(out_inverse[[x]], mode = "graph")
+```
+
+```{r}
+component.dist(out_inverse[[x]])
+```
+
 
 Running community detection to find the bridge nodes.
 
