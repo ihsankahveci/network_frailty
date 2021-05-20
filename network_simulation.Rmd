@@ -55,7 +55,7 @@ k:average degree, d:density
 
 
 ```{r}
-size_range = range(100:1000, 10)
+size_range = seq(100,1000, 10)
 random_graphs = list()
 for (size in size_range){
   mean_degrees = 6:20
@@ -68,9 +68,7 @@ names(random_graphs) <- paste0("network", 1:length(random_graphs))
 ```
 
 
-```{r}
-sapply(lapply(random_graphs, degree, gmode="graph"), length) %>% mean()
-```
+
 
 
 ```{r}
@@ -79,8 +77,8 @@ hist(sapply(lapply(random_graphs, degree, gmode="graph"), mean), xlab="mean degr
 
 ```{r}
 degree_attack <- function(g, inverse = FALSE){
-  n = 1000
   d = degree(g, gmode = "graph")
+  n = length(d)
   if(inverse == FALSE) weights = d/sum(d)
   else weights = sum(d)/(d + 0.00000001)
   nodes = sample(n, n/4, prob = weights)
