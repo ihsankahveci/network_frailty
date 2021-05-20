@@ -52,21 +52,25 @@ $$\bar{k} = \frac{\sum_i k_i}{n} =  \frac{2m}{n}$$
 $$ d(G)^u = \bar{k} \times \frac{1}{n-1} =  \frac{\bar{k}}{n-1}$$
 k:average degree, d:density
 
-```{r}
-size = 1000
-mean_degrees = 6:20 #100
-total = length(mean_degrees)*100
-densities = mean_degrees/(size-1)
-
-```
 
 
 ```{r}
-random_graphs = rgraph(n=size, m=total, mode="graph", tprob=densities, return.as.edgelist = TRUE)
+size_range = range(100:1000, 10)
+random_graphs = list()
+for (size in size_range){
+  mean_degrees = 6:20
+  total = length(mean_degrees)*100
+  densities = mean_degrees/(size-1)
+  graphs = rgraph(n=size, m=total, mode="graph", tprob=densities, return.as.edgelist = TRUE)
+  random_graphs = c(random_graphs, graphs)
+}
 names(random_graphs) <- paste0("network", 1:length(random_graphs))
 ```
 
 
+```{r}
+sapply(lapply(random_graphs, degree, gmode="graph"), length) %>% mean()
+```
 
 
 ```{r}
@@ -120,10 +124,6 @@ avg_degree = sapply(lapply(out, degree, gmode="graph"), mean)
 avg_degree_inv = sapply(lapply(out_inv, degree, gmode="graph"), mean)
 
 graphs_df = tibble(graph = 1:length(out), frailty, frailty_inv, avg_degree, avg_degree_inv)
-```
-
-```{r}
-graphs_df
 ```
 
 
