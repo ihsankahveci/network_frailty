@@ -110,20 +110,42 @@ frailty = cutpoints(out, mode = "graph") %>% map_dbl(length)
 frailty_inv = cutpoints(out_inv, mode = "graph") %>% map_dbl(length)
 ```
 
+```{r}
+test = rgraph(10, 1, 0.4, mode = "graph", return.as.edgelist = T)
+test_out = degree_attack(test)
+test_inv = degree_attack(test, inverse = TRUE)
+```
+
+```{r}
+cutpoints(test, mode = "graph")
+cutpoints(test_out, mode = "graph")
+cutpoints(test_inv, mode = "graph")
+
+```
+
+```{r}
+gplot(test, usearrows = FALSE, label = 1:10)
+gplot(test_out, usearrows = FALSE,  label = 1:10)
+gplot(test_inv, usearrows = FALSE,  label = 1:10)
+
+```
 
 Creating a data_frame for visualizations.
 
 ```{r}
-avg_degree = sapply(lapply(out, degree, gmode="graph"), mean)
-avg_degree_inv = sapply(lapply(out_inv, degree, gmode="graph"), mean)
+avg_org = sapply(lapply(random_graphs, degree, gmode="graph"), mean)
+avg_out = sapply(lapply(out, degree, gmode="graph"), mean)
+avg_out_inv = sapply(lapply(out_inv, degree, gmode="graph"), mean)
 
-graphs_df = tibble(graph = 1:length(out), frailty, frailty_inv, avg_degree, avg_degree_inv)
+graphs_df = tibble(graph = names(out), avg_org, avg_out, avg_out_inv, frailty, frailty_inv)
 ```
+
+
 
 
 ```{r}
 graphs_df %>%
-  ggplot(aes(x=avg_degree, y=frailty)) +
+  ggplot(aes(x=avg_out, y=frailty)) +
   geom_point() +
   geom_smooth()
 ```
