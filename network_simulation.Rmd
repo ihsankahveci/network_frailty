@@ -41,7 +41,10 @@ library(sna)
 library(dplyr)
 library(purrr)
 library(ggplot2)
+library(parallel)
 options(scipen = 999)
+
+source("degree_attack.R")
 ```
 
 ## Introduction
@@ -52,10 +55,22 @@ $$\bar{k} = \frac{\sum_i k_i}{n} =  \frac{2m}{n}$$
 $$ d(G)^u = \bar{k} \times \frac{1}{n-1} =  \frac{\bar{k}}{n-1}$$
 k:average degree, d:density
 
+Following the mathematical framework developed in Newman et al. (2002), Meyers et al. (2005) and Newman (2005), we use percolation theory to study the predicted change in mean network degree due to the epidemic removal of nodes. For a node that never becomes infected during an epidemic, we can distinguish between its original degree, k, and its degree in the residual network consisting of all the nodes that remain uninfected by the epidemic, kr. The original degree of a node indicates the potential exposure to infection, thus the change in network connectivity in terms of the original node degree gives a measure of the frailty of high-degree nodes. Remaining nodes in the residual network are partially protected by the removal of neighbours, and the concomitant reduction in degree, i.e. potential chains of transmission are interrupted. We call this process interference, which can be described in terms of difference between the original and the residual degree of nodes on the residual network (see formal definitions later). To understand the structural evolution of the network, we focus on three network statistics: the mean degree in the original network, 〈k〉; the mean original degree of individuals remaining in the residual network, 〈k〉r; and the mean residual degree of the individuals remaining in the residual network, 〈kr〉r.
 
+Finally, we define frailty as the difference between the mean original degree in the original network and the mean original degree in the residual network, scaled by the mean original degree,
+
+ϕ=⟨k⟩−〈k〉r〈k〉.
+2.3
+This parameter quantifies the extent to which the high-degree individuals are preferentially infected during an epidemic. We define interference as the scaled difference between the mean original degree in the residual network and the mean residual degree in the residual network,
+
+θ=〈k〉r−〈kr〉r〈k〉.
+2.4
+This quantity is the extent to which the epidemic has cut-off connectivity among the remaining susceptible population.
+
+source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1635496/
 
 ```{r}
-size_range = seq(100,1000, 10)
+size_range = 300
 random_graphs = list()
 for (size in size_range){
   mean_degrees = 6:20
@@ -75,25 +90,6 @@ names(random_graphs) <- paste0("network", 1:length(random_graphs))
 hist(sapply(lapply(random_graphs, degree, gmode="graph"), mean), xlab="mean degree", main="")
 ```
 
-```{r}
-degree_attack <- function(g, inverse = FALSE){
-  d = degree(g, gmode = "graph")
-  n = length(d)
-  if(inverse == FALSE) weights = d/sum(d)
-  else weights = sum(d)/(d + 0.00000001)
-  nodes = sample(n, n/4, prob = weights)
-  for (node in nodes){
-    inds = which(g[,1] == node)
-    if(length(inds) == 0) next #in case the node has no edges
-    ind = sample(inds, 1)
-    adj = g[ind, 2]
-    ind.2 = which(g[,1] == adj & g[,2] == node) #find the symmetric row
-    g[c(ind, ind.2),3] = 0  
-  }
-  return(g)
-}
-  
-```
 
 note: collapse graph for removing the single way edges 
 
@@ -102,8 +98,8 @@ note: collapse graph for removing the single way edges
 Simulating degree attack both forwards and backwards
 
 ```{r}
-out = lapply(random_graphs, degree_attack)
-out_inv = lapply(random_graphs, degree_attack, inverse = TRUE)
+out = mclapply(random_graphs, degree_attack)
+out_inv = mclapply(random_graphs, degree_attack, inverse = TRUE)
 ```
 
 
@@ -111,7 +107,7 @@ Running community detection to calculate the number of bridge nodes per graph..
 
 ```{r}
 frailty = cutpoints(out, mode = "graph") %>% map_dbl(length)
-frailty_inv = cutpoints(out_inverse, mode = "graph") %>% map_dbl(length)
+frailty_inv = cutpoints(out_inv, mode = "graph") %>% map_dbl(length)
 ```
 
 
@@ -132,6 +128,10 @@ graphs_df %>%
   geom_smooth()
 ```
 
+```{r}
+graphs_df
+```
+```
 
 
 ## Code Appendix
